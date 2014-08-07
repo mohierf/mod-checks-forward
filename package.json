@@ -1,0 +1,30 @@
+{
+  "name": "checks-forward",
+  "types": ["module"],
+  "version": "0.1",
+  "homepage": "http://github.com/shinken-monitoring/mod-checks-forward",
+  "author": "Frederic MOHIER",
+  "description": "Forward checks result to another server via NSCA.",
+  "contributors": [
+    {
+      "name": "Jerome LEBEON",
+      "email": "Jerome@LeBeon.org"
+    },
+    {
+      "name": "Frederic MOHIER",
+      "email": "frederic.mohier@gmail.com"
+    }
+  ],
+  "repository": "https://github.com/shinken-monitoring/mod-checks-forward",
+  "keywords": [
+    "module",
+    "broker",
+    "nsca",
+    "glpi",
+    "forward"
+  ],
+  "dependencies": {
+    "shinken": ">=2.0"
+  },
+  "license": "AGPL"
+}

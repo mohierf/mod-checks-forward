@@ -1,1 +1,1 @@
-doc/index.rst
+Please [see here](doc/index.rst)

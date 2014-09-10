@@ -38,9 +38,9 @@ class CheckForward(BaseModule):
             self.nsca_server_host = str(getattr(mod_conf, 'nsca_server_host', '127.0.0.1'))
             self.nsca_server_port = int(getattr(mod_conf, 'nsca_server_port', 5667))
 
-            logger.info("[Checks forward] module configuration, forward to: %s:%s, using %s with configuration %s", self.nsca_server_host, self.nsca_server_port, self.send_nsca_bin, self.send_nsca_config)
+            logger.info("[Checks forward] module configuration, forward to: %s:%s, using %s with configuration %s" % (self.nsca_server_host, self.nsca_server_port, self.send_nsca_bin, self.send_nsca_config))
             if self.glpi_entities:
-                logger.info("[Checks forward] module configuration, forward checks for GLPI entities: %s", str(self.glpi_entities))
+                logger.info("[Checks forward] module configuration, forward checks for GLPI entities: %s" % str(self.glpi_entities))
             else:
                 logger.info("[Checks forward] module configuration, forward checks for all hosts/services")
 

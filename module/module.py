@@ -7,9 +7,7 @@ This module forwards all filtered datas to another shinken
 This is useful to create "real-test traffic"
 """
 
-import socket
-import MySQLdb 
-from subprocess import call
+from subprocess import Popen
 from shinken.basemodule import BaseModule
 from shinken.log import logger
 
@@ -78,8 +76,7 @@ class CheckForward(BaseModule):
         nsca = self.get_nsca(b)
         command = "echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            retcode = call(command, shell=True)
-            logger.debug("[Checks forward] manage_host_check_result_brok, command %s, return code: %d" % (command, retcode))
+            retcode = Popen(command, shell=True)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
         
@@ -94,8 +91,7 @@ class CheckForward(BaseModule):
 
         command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            retcode = call(command, shell=True)
-            logger.debug("[Checks forward] manage_service_check_result_brok, command %s, return code: %d" % (command, retcode))
+            retcode = Popen(command, shell=True)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
 

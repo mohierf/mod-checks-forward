@@ -7,16 +7,14 @@ This module forwards all filtered datas to another shinken
 This is useful to create "real-test traffic"
 """
 
-import socket
-import MySQLdb 
-from subprocess import call
+from subprocess import Popen
 from shinken.basemodule import BaseModule
 from shinken.log import logger
 
 properties = {
     'daemons': ['broker'],
     'type': 'checks-forward',
-    'external': False,
+    'external': True,
 }
 
 def get_instance(mod_conf):
@@ -78,8 +76,7 @@ class CheckForward(BaseModule):
         nsca = self.get_nsca(b)
         command = "echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            retcode = call(command, shell=True)
-            logger.debug("[Checks forward] manage_host_check_result_brok, command %s, return code: %d" % (command, retcode))
+            retcode = Popen(command, shell=True)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
         
@@ -94,8 +91,7 @@ class CheckForward(BaseModule):
 
         command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            retcode = call(command, shell=True)
-            logger.debug("[Checks forward] manage_service_check_result_brok, command %s, return code: %d" % (command, retcode))
+            retcode = Popen(command, shell=True)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
 
@@ -105,7 +101,6 @@ class CheckForward(BaseModule):
         return_code = b.data['return_code']
         output = b.data['output']
 
-        # TODO ... perfdata !
         if (check_type == "service_check_result"):
             service_description = b.data['service_description']
             # <hostname>[TAB]<service name>[TAB]<return code>[TAB]<plugin output>
@@ -115,3 +110,13 @@ class CheckForward(BaseModule):
             send_nsca = hostname+"\t"+str(return_code)+"\t"+output+"|"+b.data['perf_data']
 
         return send_nsca
+
+    def main(self):
+        self.set_proctitle(self.name)
+        self.set_exit_handler()
+        while not self.interrupted:
+            l = self.to_q.get()  # can block here :)
+            for b in l:
+                # unserialize the brok before use it
+                b.prepare()
+                self.manage_brok(b)

@@ -24,7 +24,7 @@ def get_instance(mod_conf):
 class Checkforward(BaseModule):
     def __init__(self, mod_conf):
         BaseModule.__init__(self, mod_conf)
-        logger.init("[Checks forward] module init")
+        logger.info("[Checks forward] module init")
 
         try:
             logger.debug("[Checks forward] module init : get parameters entities")
@@ -80,7 +80,7 @@ class Checkforward(BaseModule):
             return
         
         try:
-            self.get_nsca(b)
+            self.send_nsca(b)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
 
@@ -92,12 +92,12 @@ class Checkforward(BaseModule):
             return
 
         try:
-            self.get_nsca(b)
+            self.send_nsca(b)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
             
 
-    def get_nsca(self, b):
+    def send_nsca(self, b):
         check_type = b.type
         hostname = b.data['host_name']
         return_code = b.data['return_code']
@@ -111,6 +111,7 @@ class Checkforward(BaseModule):
             # <hostname>[TAB]<return code>[TAB]<plugin output>
             send_nsca = hostname+"\t"+str(return_code)+"\t"+output+"|"+b.data['perf_data']
 
+        logger.warning("[Checks forward] sending nsca '%s' for '%s'" % (check_type,hostname))
         command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (send_nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
             retcode = Popen(command, shell=True)

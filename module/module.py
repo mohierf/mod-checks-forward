@@ -60,17 +60,17 @@ class Checkforward(BaseModule):
         logger.debug("[Checks forward] init function")
 
     def manage_initial_host_status_brok(self, b):
-        logger.warning("[Checks forward] initial host status: %s" % str(b.data['customs']))
         # if not self.glpi_entities:
         #     return
 
-        self.cache_host_entities_id[b.data['host_name']] = -1
+        # self.cache_host_entities_id[b.data['host_name']] = -1
         try:
+            logger.warning("[Checks forward] initial host status: %s" % str(b.data['customs']))
             self.cache_host_entities_id[b.data['host_name']] = b.data['customs']['_ENTITIESID']
             if self.cache_host_entities_id[b.data['host_name']] in self.glpi_entities:
                 logger.info("[Checks forward] host %s checks will be forwarded (entity: %s)" % (b.data['host_name'], self.cache_host_entities_id[b.data['host_name']]))
         except:
-            logger.error("[Checks forward] no entity Id for host: %s", b.data['host_name'])
+            logger.error("[Checks forward] Error in initial_host_status")
         
     def manage_host_check_result_brok(self, b):
         try:

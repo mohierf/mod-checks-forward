@@ -18,26 +18,32 @@ properties = {
 }
 
 def get_instance(mod_conf):
-    instance = CheckForward(mod_conf)
+    instance = Checkforward(mod_conf)
     return instance
 
-class CheckForward(BaseModule):
+class Checkforward(BaseModule):
     def __init__(self, mod_conf):
         BaseModule.__init__(self, mod_conf)
-        
+        logger.init("[Checks forward] module init")
+
         try:
+            logger.debug("[Checks forward] module init : get parameters entities")
+
             # Module configuration
             self.glpi_entities = getattr(mod_conf, 'glpi_entities', '')
             self.glpi_entities = self.glpi_entities.split(',')
             if len(self.glpi_entities) > 0 and self.glpi_entities[0] == '':
                 self.glpi_entities = None
 
+            logger.warning("[Checks forward] module init : get parameters nsca")
             self.send_nsca_bin = str(getattr(mod_conf, 'send_nsca_bin', '/usr/sbin/send_nsca'))
             self.send_nsca_config = str(getattr(mod_conf, 'send_nsca_config', '/etc/send_nsca.cfg'))
 
+            logger.warning("[Checks forward] module init : get parameters nsca server")
             self.nsca_server_host = str(getattr(mod_conf, 'nsca_server_host', '127.0.0.1'))
             self.nsca_server_port = int(getattr(mod_conf, 'nsca_server_port', 5667))
 
+            logger.warning("[Checks forward] module init : log info")
             logger.info("[Checks forward] module configuration, forward to: %s:%s, using %s with configuration %s" % (self.nsca_server_host, self.nsca_server_port, self.send_nsca_bin, self.send_nsca_config))
             if self.glpi_entities:
                 logger.info("[Checks forward] module configuration, forward checks for GLPI entities: %s" % str(self.glpi_entities))
@@ -54,17 +60,17 @@ class CheckForward(BaseModule):
         logger.debug("[Checks forward] init function")
 
     def manage_initial_host_status_brok(self, b):
-        logger.debug("[Checks forward] initial host status: %s", str(b.data['customs']))
-        if not self.glpi_entities:
-            return
-            
+        logger.warning("[Checks forward] initial host status: %s" % str(b.data['customs']))
+        # if not self.glpi_entities:
+        #     return
+
         self.cache_host_entities_id[b.data['host_name']] = -1
         try:
             self.cache_host_entities_id[b.data['host_name']] = b.data['customs']['_ENTITIESID']
             if self.cache_host_entities_id[b.data['host_name']] in self.glpi_entities:
                 logger.info("[Checks forward] host %s checks will be forwarded (entity: %s)" % (b.data['host_name'], self.cache_host_entities_id[b.data['host_name']]))
         except:
-            logger.warning("[Checks forward] no entity Id for host: %s", b.data['host_name'])
+            logger.error("[Checks forward] no entity Id for host: %s", b.data['host_name'])
         
     def manage_host_check_result_brok(self, b):
         try:
@@ -72,10 +78,11 @@ class CheckForward(BaseModule):
                 return
         except:
             return
-            
+        
         nsca = self.get_nsca(b)
         command = "echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
+            logger.warning("[Checks forward] nsca '%s'" % command)
             retcode = Popen(command, shell=True)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
@@ -86,9 +93,8 @@ class CheckForward(BaseModule):
                 return
         except:
             return
-            
-        nsca = self.get_nsca(b)
 
+        nsca = self.get_nsca(b)
         command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
             retcode = Popen(command, shell=True)
@@ -111,12 +117,15 @@ class CheckForward(BaseModule):
 
         return send_nsca
 
+    def manage_brok(self, b):
+        if b.type in ('initial_host_status', 'initial_service_status', 'service_check_result', 'host_check_result'):
+            BaseModule.manage_brok(self, b)
+
     def main(self):
         self.set_proctitle(self.name)
         self.set_exit_handler()
         while not self.interrupted:
-            l = self.to_q.get()  # can block here :)
+            l = self.to_q.get()
             for b in l:
-                # unserialize the brok before use it
                 b.prepare()
                 self.manage_brok(b)

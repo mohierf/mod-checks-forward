@@ -79,14 +79,11 @@ class Checkforward(BaseModule):
         except:
             return
         
-        nsca = self.get_nsca(b)
-        command = "echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            logger.warning("[Checks forward] nsca '%s'" % command)
-            retcode = Popen(command, shell=True)
+            self.get_nsca(b)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
-        
+
     def manage_service_check_result_brok(self, b):
         try:
             if self.glpi_entities and self.cache_host_entities_id[b.data['host_name']] not in self.glpi_entities:
@@ -94,12 +91,11 @@ class Checkforward(BaseModule):
         except:
             return
 
-        nsca = self.get_nsca(b)
-        command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
         try:
-            retcode = Popen(command, shell=True)
+            self.get_nsca(b)
         except OSError as e:
             logger.error("[Checks forward] Error forward nsca '%s'" % e)
+            
 
     def get_nsca(self, b):
         check_type = b.type
@@ -115,7 +111,12 @@ class Checkforward(BaseModule):
             # <hostname>[TAB]<return code>[TAB]<plugin output>
             send_nsca = hostname+"\t"+str(return_code)+"\t"+output+"|"+b.data['perf_data']
 
-        return send_nsca
+        command = "/bin/echo \"%s\" | %s -H %s -p %s -c %s" % (send_nsca, self.send_nsca_bin, self.nsca_server_host, self.nsca_server_port, self.send_nsca_config)
+        try:
+            retcode = Popen(command, shell=True)
+            return True
+        except:
+            return False
 
     def manage_brok(self, b):
         if b.type in ('initial_host_status', 'initial_service_status', 'service_check_result', 'host_check_result'):

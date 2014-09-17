@@ -1,7 +1,7 @@
 {
   "name": "checks-forward",
   "types": ["module"],
-  "version": "0.2",
+  "version": "1.0",
   "homepage": "http://github.com/mohierf/mod-checks-forward",
   "author": "Frederic MOHIER",
   "description": "Forward checks result to another server via NSCA.",
